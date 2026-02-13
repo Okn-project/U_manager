@@ -1,0 +1,6 @@
+PyQt5>=5.15
+open3d>=0.17
+geopandas>=0.12
+ezdxf>=1.0
+shapely>=2.0
+laspy>=2.2
