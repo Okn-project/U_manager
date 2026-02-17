@@ -4,3 +4,7 @@ geopandas>=0.12
 ezdxf>=1.0
 shapely>=2.0
 laspy>=2.2
+numpy==2.2
+pandas==2.3.3
+ezdxf-shapely
+pytest>=7.0
