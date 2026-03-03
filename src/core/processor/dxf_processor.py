@@ -3,10 +3,10 @@ from shapely import Polygon
 
 # Temporary import
 from src.core.parsers.dxf_parser import DxfParser
-from src.formatters.ezdxf_geopandas_convert import DXFShapelyFormat
+from src.formatters.ezdxf_geopandas_convert import DXFShapelyFormat, ShapelyDXFFormat
 
 # Temporary usage
-FILE_PATH = r'C:\Users\Mission\Desktop\main\proj\U_manager\tests\data\small_test.dxf'
+FILE_PATH = r'C:\Users\Mission\Desktop\main\proj\U_manager\tests\data\big_test.dxf'
 parser = DxfParser(file_path=FILE_PATH)
 parser.read_dxf()
 dxf_shapely_format = DXFShapelyFormat(doc=parser.doc)
@@ -35,6 +35,8 @@ class CADProcessor:
         select every closed line from user SETTINGS with selector
         convert closed lines into polygons
         select every line from user SETTINGS
+        clip every line inside polygone
+        replace old lines in doc
         :return: None
         """
         polygon_selector = (
@@ -54,15 +56,36 @@ class CADProcessor:
 
         # TODO use sjoin + intersection for better perfomanse in future versions
         new_lines = gpd.overlay(lines, polygons, how='difference')
-        print(self.doc.to_string())
+        # print(self.doc.to_string())
         self.doc.drop(list(lines.index.values), axis='rows', inplace=True)
-        self.doc = gpd.pd.concat(objs=[self.doc, new_lines])
-        print(self.doc.to_string())
+        self.doc = gpd.pd.concat(objs=[self.doc, new_lines], ignore_index=True)
+        # print(self.doc.to_string())
+
+    def explode_multilines(self, layer: str):
+        """
+        explode multilines
+        replace doc old multilines to new lines
+        :param layer: layer in wich to explode multilines
+        :return:
+        """
+        multilines_selector = (
+                (self.doc.geometry.geom_type == "MultiLineString") &
+                (self.doc.layer == layer)
+        )
+        multilines = self.doc[multilines_selector]
+        new_lines = self.doc[multilines_selector].explode(ignore_index=True)
+        self.doc.drop(list(multilines.index.values), axis="rows", inplace=True)
+        self.doc = gpd.pd.concat(objs=[self.doc, new_lines], ignore_index=True)
 
 
 # Temporary usage
-SETTINGS = {"lines": "ГОРИЗОНТАЛИ", "polygons": "ЗАНИЯ"}
+SETTINGS = {"lines": "ИИ_ГОРИЗОНТАЛИ_ОСН", "polygons": "ИИ_СТРОЕНИЕ"}
 dxf_processor = CADProcessor(doc=dxf_shapely_format.doc, settings=SETTINGS)
 dxf_processor.show_polylines()
 dxf_processor.clip_polygon_areas()
+dxf_processor.explode_multilines(SETTINGS["lines"])
+gpd_dxf_format = ShapelyDXFFormat(dxf_processor.doc)
+gpd_dxf_format.convert_data_to_dxf()
+save_path = r"../../../tests/data"
+gpd_dxf_format.dxf_doc.saveas(f"{save_path}/big_test_res.dxf", encoding='utf-8')
 print("debug")
