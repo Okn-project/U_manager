@@ -1,5 +1,4 @@
 import ezdxf
-from ezdxf.document import Drawing
 
 
 class DxfParser:
@@ -19,6 +18,6 @@ class DxfParser:
         except ezdxf.DXFStructureError:
             print(f"Invalid or corrupted DXF file.")
             raise ValueError
-
         except UnicodeDecodeError:
             print("decoding error occured")
+
