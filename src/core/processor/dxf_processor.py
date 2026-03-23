@@ -1,37 +1,17 @@
 import geopandas as gpd
 from shapely import Polygon
-
-# Temporary import
-from src.core.parsers.dxf_parser import DxfParser
-from src.formatters.ezdxf_geopandas_convert import DXFShapelyFormat, ShapelyDXFFormat
-
-# Temporary usage
-FILE_PATH = r'C:\Users\Mission\Desktop\main\proj\U_manager\tests\data\big_test.dxf'
-parser = DxfParser(file_path=FILE_PATH)
-parser.read_dxf()
-dxf_shapely_format = DXFShapelyFormat(doc=parser.doc)
-dxf_shapely_format.get_data_from_ezdxf()
-dxf_shapely_format.convert_data_to_gpd()
+from src.models.app_model import AppDoc
 
 
-class CADProcessor:
+class DXFProcessor:
     """Processor manipulates autocad objects
     it current version it realises these functions:
     - clip horisontals inside polygons
     """
 
-    def __init__(self, doc: gpd.GeoDataFrame, settings: dict):
-        # settings - temporary dict  to be transfered into class Settings object
-        self.doc = doc
-        self.settings = settings
-
-    def show_polylines(self):
-        # temporary function
-        pass
-
-    def clip_polygon_areas(self):
+    @staticmethod
+    def clip_polygon_areas(doc: AppDoc, settings: dict) -> None:
         """
-
         select every closed line from user SETTINGS with selector
         convert closed lines into polygons
         select every line from user SETTINGS
@@ -39,53 +19,45 @@ class CADProcessor:
         replace old lines in doc
         :return: None
         """
+
         polygon_selector = (
-                (self.doc.geometry.geom_type == "LineString") &
-                (self.doc["is_closed"] &
-                 (self.doc.layer == self.settings["polygons"]))
+                (doc.geometries.geometry.geom_type == "LineString") &
+                (doc.geometries["is_closed"] &
+                 (doc.geometries.layer == settings["polygons"]))
         )
 
         line_selecor = (
-                (self.doc.geometry.geom_type == "LineString") &
-                (self.doc.layer == self.settings["lines"])
+                (doc.geometries.geometry.geom_type == "LineString") &
+                (doc.geometries.layer == settings["lines"])
         )
-        self.doc.loc[polygon_selector, "geometry"] = self.doc.loc[polygon_selector, "geometry"].apply(
+        doc.geometries.loc[polygon_selector, "geometry"] = doc.geometries.loc[polygon_selector, "geometry"].apply(
             lambda geometry: Polygon(geometry.coords))
-        polygons = self.doc[polygon_selector]
-        lines = self.doc[line_selecor]
+        polygons = doc.geometries[polygon_selector]
+        lines = doc.geometries[line_selecor]
 
         # TODO use sjoin + intersection for better perfomanse in future versions
         new_lines = gpd.overlay(lines, polygons, how='difference')
-        # print(self.doc.to_string())
-        self.doc.drop(list(lines.index.values), axis='rows', inplace=True)
-        self.doc = gpd.pd.concat(objs=[self.doc, new_lines], ignore_index=True)
-        # print(self.doc.to_string())
+        doc.geometries.drop(list(lines.index.values), axis='rows', inplace=True)
+        doc.geometries = gpd.pd.concat(objs=[doc.geometries, new_lines], ignore_index=True)
 
-    def explode_multilines(self, layer: str):
+        # new_lines.to
+
+    @staticmethod
+    def explode_multilines(doc: AppDoc, settings: dict):
         """
         explode multilines
         replace doc old multilines to new lines
-        :param layer: layer in wich to explode multilines
+        :param doc: application document
+        :param settings: chosen layer in wich to explode multilines
         :return:
         """
+        layer = settings.get("lines")
+
         multilines_selector = (
-                (self.doc.geometry.geom_type == "MultiLineString") &
-                (self.doc.layer == layer)
+                (doc.geometries.geometry.geom_type == "MultiLineString") &
+                (doc.geometries.layer == layer)
         )
-        multilines = self.doc[multilines_selector]
-        new_lines = self.doc[multilines_selector].explode(ignore_index=True)
-        self.doc.drop(list(multilines.index.values), axis="rows", inplace=True)
-        self.doc = gpd.pd.concat(objs=[self.doc, new_lines], ignore_index=True)
-
-
-# Temporary usage
-SETTINGS = {"lines": "ИИ_ГОРИЗОНТАЛИ_ОСН", "polygons": "ИИ_СТРОЕНИЕ"}
-dxf_processor = CADProcessor(doc=dxf_shapely_format.doc, settings=SETTINGS)
-dxf_processor.show_polylines()
-dxf_processor.clip_polygon_areas()
-dxf_processor.explode_multilines(SETTINGS["lines"])
-gpd_dxf_format = ShapelyDXFFormat(dxf_processor.doc)
-gpd_dxf_format.convert_data_to_dxf()
-save_path = r"../../../tests/data"
-gpd_dxf_format.dxf_doc.saveas(f"{save_path}/big_test_res.dxf", encoding='utf-8')
-print("debug")
+        multilines = doc.geometries[multilines_selector]
+        new_lines = doc.geometries[multilines_selector].explode(ignore_index=True)
+        doc.geometries.drop(list(multilines.index.values), axis="rows", inplace=True)
+        doc.geometries = gpd.pd.concat(objs=[doc.geometries, new_lines], ignore_index=True)

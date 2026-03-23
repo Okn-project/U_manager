@@ -1,123 +1,149 @@
-import ezdxf.entities.dxfns
-import shapely
-from shapely import LineString
+# temporary import
+import pandas as pd
+import ezdxf
+from ezdxf.addons import Importer
+
+from src.models.dxf_model import DXFDoc
+
+from src.models.app_model import AppDoc
 from ezdxf.document import Drawing
+from shapely import LineString, Polygon
 import numpy as np
 import geopandas as gpd
 
-# Temporary import
-from src.core.parsers.dxf_parser import DxfParser
-
-
-# Temporary usage
-# FILE_PATH = r'../../tests/data/small_test.dxf'
-# parser = DxfParser(file_path=FILE_PATH)
-# parser.read_dxf()
-
 
 class DXFShapelyFormat:
-    """convert ezdxf doc objects into list of atributes, collect list of atributes  to storage
-    current version converts objects: LWPOLYLINE
-    current version gets attributes:
-    layer
-    linetype
-    lineweight
-    elevation
-    color
-    is_closed: 1 if closed 0 if not closed
-    geometry: shapely object
+    """convert DXFDoc object into AppDoc object
+
+    convertion_mapping for objects:
+    LWPOLYLINE:
+    common attrs [layer, elevation, color, is_closed]
+    api_convertion: dxftype & get_points  -> shapely LineString
     """
 
-    def __init__(self, doc: Drawing):
-        self.doc = doc
-        self.storage = []
+    def __init__(self):
+        self.convertion_map = \
+            {"LWPOLYLINE": self.convert_lwpolyline_to_linestring
+             }
 
-    def get_data_from_ezdxf(self) -> None:
+    def convert_dxf_data_to_gpd(self, dxf_doc: DXFDoc, app_doc: AppDoc) -> None:
         """
-        converts ezdxf LWPOLYLINE objects  into list of atributes, collect list of atributes  to storage
-        see list of attributes in DXFShapelyFormat.doc
+        converts list of dictionaries with dxf entites  into gpd.dataframe
+        :param dxf_doc:
+        :param app_doc:
+        :return:
         """
-        for entity in self.doc.modelspace():
-            if entity.dxftype() == 'LWPOLYLINE':
-                try:
-                    coords = entity.lwpoints.values[:, 0:2]
-                    # TODO redo getting LWPOLYLINE points
-                    layer = entity.dxf.layer
-                    linetype = entity.dxf.linetype
-                    lineweight = entity.dxf.const_width
-                    elevation = entity.dxf.elevation
-                    color = entity.dxf.color
-                    is_closed = entity.dxfattribs()["flags"]
-                    geometry = shapely.LineString(coords)
-                    self.storage.append(
-                        [layer,
-                         linetype,
-                         lineweight,
-                         elevation,
-                         color,
-                         is_closed,
-                         geometry])
-                except ezdxf.lldxf.const.DXFAttributeError:
-                    print("one of attributes does no exist, process ruined")
+        entities = dxf_doc.entities
+        layers = dxf_doc.layers
+        line_types = dxf_doc.linetypes
+        geometries = []
 
-        print("")
+        for entity in entities:
+            convert_func = self.convertion_map.get(entity["dxftype"])
+            geometry = convert_func(entity)
+            geometries.append(geometry)
+        app_doc.geometries = gpd.GeoDataFrame(data=geometries)
+        app_doc.layers = pd.DataFrame(data=layers)[["name", "linetype", "color", "lineweight"]]
+        app_doc.line_styles = pd.DataFrame(data=line_types)[["name", "description", 'tags']]
 
-    def convert_data_to_gpd(self):
-        """converts storage data list into gpd.dataframe
-        clears storage after done"""
-        self.doc = gpd.GeoDataFrame(data=self.storage, columns=[
-            'layer',
-            'linetype',
-            'lineweight',
-            'elevation',
-            'color',
-
-            'is_closed',
-            'geometry'])
-        self.storage.clear()
+    @staticmethod
+    def convert_lwpolyline_to_linestring(lwpolyline: dict) -> dict:
+        """
+        process lwpolyline coords
+        :param lwpolyline:
+        :return:
+        """
+        coordinates = np.array(lwpolyline.pop("get_points"))[:, :2]
+        geometry = LineString(coordinates=coordinates)
+        lwpolyline["geometry"] = geometry
+        return lwpolyline
 
 
 class ShapelyDXFFormat:
+    # TODO add version options interface
     """
-    creates dxf_doc version: 2010
-    TODO add version options interface
-    convert gpd dataframe objects into ezdxf object
-    current version converts objects:  polygon, LWPOLYLINE
-    current version gets attributes:
-        layer
-        linetype
-        lineweight
-        elevation
-        color
+    temporary
+    create dxf_doc version: 2010
+    convert gpd dataframe objects into ezdxf objects
+    add ezdxf objects to dxf_doc
 
-        geometry: shapely object
+     convertion_mapping for objects:
+    LineString:
+    common attrs
+    [layer,
+    elevation,
+    color,
+    coords
+    ] -> dict
+    api attrs
+    [is_closed -> closed]
+
+
+    polygon: common attrs
+    layer,
+    elevation,
+    color,
+    coords
+    ] -> dict
+    api attrs
+    [is_closed -> closed
+    polygon.exterior.coords -> coords
+    ]
+    """
+
+    def __init__(self):
+        self.convertion_map = \
+            {"LineString": self.convert_linestring_to_lwpolyline,
+             "Polygon": self.convert_polygon_to_lwpolyline
+             }
+        self.coords_convert = \
+            {"LineString": lambda linestring: linestring.coords,
+             "Polygon": lambda polygon: polygon.exterior.coords
+             }
+
+    def convert_gpd_data_to_dxf(self, dxf_doc: DXFDoc, app_doc: AppDoc) -> None:
         """
+               TODO
+               :param dxf_doc:
+               :param app_doc:
+               :return:
+               """
+        # temporary usage
+        doc = ezdxf.new(setup=False)
+        importer = Importer(source=dxf_doc.data, target=doc)
+        modelspace = doc.modelspace()
+        importer.import_table("linetypes")
+        importer.import_table("layers")
 
-    def __init__(self, doc: gpd.GeoDataFrame):
-        self.doc = doc
-        self.dxf_doc = ezdxf.new("R2010", setup=True)
-        self.model_space = self.dxf_doc.modelspace()
+        for ndx, geometry in app_doc.geometries.iterrows():
+            add_func = f"add_{geometry["dxftype"].lower()}"
+            add_func = getattr(modelspace, add_func)
+            coords, dxfattribs = self.convertion_map.get(geometry.geometry.geom_type)(geometry)
+            add_func(coords, dxfattribs=dxfattribs.to_dict())
 
-    def convert_data_to_dxf(self):
+        # temporary usage
+        doc.saveas(r"../../tests/data/test_res.dxf", encoding='utf-8')
+
+    @staticmethod
+    def convert_linestring_to_lwpolyline(linestring: gpd.pd.Series) -> tuple:
         """
-        converts gpdDataframe objects  into ezdxf objects, add objects to dxf_doc model_space
-        see list of attributes in ShapelyDXFFormat.doc
-        :return: None
+        get coordinates and dxf attribs of linestring
+        :param linestring: gpd series linestring object
+        :return: coordinates: list   dxf attribs: series
         """
+        coords = list(linestring.geometry.coords)
+        linestring.rename(inplace=True, index={"is_closed": "closed"})
+        dxf_attribs = linestring.drop(["geometry", "dxftype"])
+        return coords, dxf_attribs
 
-
-        for ndx, geometry in self.doc.iterrows():
-            # all atrs without geometry
-            entity_attribs = geometry[["layer",  "lineweight", "elevation", "color"]].to_dict()
-            print(entity_attribs)
-            geom_type = geometry.geometry.geom_type
-            if geom_type == "Polygon":
-                coords = np.array(geometry.geometry.exterior.coords)
-            elif geom_type == "LineString":
-                coords = np.array(geometry.geometry.coords)
-            self.model_space.add_lwpolyline(coords, dxfattribs=entity_attribs)
-
-        # Temporary usage
-# dxf_shapely_format = DXFShapelyFormat(doc=parser.doc)
-# dxf_shapely_format.get_data_from_ezdxf()
-# .convert_data_to_gpd()
+    @staticmethod
+    def convert_polygon_to_lwpolyline(polygon: gpd.pd.Series) -> tuple:
+        """
+        get coordinates and dxf attribs of polygon
+        :param polygon: gpd series polygon object
+        :return: coordinates: list   dxf attribs: series
+        """
+        coords = list(polygon.geometry.exterior.coords)
+        polygon.rename(inplace=True, index={"is_closed": "closed"})
+        dxf_attribs = polygon.drop(["geometry", "dxftype"])
+        return coords, dxf_attribs
