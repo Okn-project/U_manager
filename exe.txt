@@ -1,1 +1,1 @@
-pyinstaller U_manager.spec
+pyinstaller U_Manager.spec

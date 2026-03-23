@@ -1,0 +1,11 @@
+dist/
+build/
+__pycache__/
+exe.txt
+*.spec
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+*.exe

@@ -122,7 +122,7 @@ class ShapelyDXFFormat:
             add_func(coords, dxfattribs=dxfattribs.to_dict())
 
         # temporary usage
-        doc.saveas(r"../../tests/data/test_res.dxf", encoding='utf-8')
+        doc.saveas(r"tests/data/test_res.dxf", encoding='utf-8')
 
     @staticmethod
     def convert_linestring_to_lwpolyline(linestring: gpd.pd.Series) -> tuple:

@@ -1,16 +1,9 @@
-# This is a sample Python script.
+from src.app.application import Application
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+if __name__ == "__main__":
+    app = Application()
+    app.dxf_controller.read_dxf()
+    app.dxf_controller.convert_dxf_gpd()
+    app.dxf_controller.clip_poygons()
+    app.dxf_controller.convert_gpd_dxf()
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
