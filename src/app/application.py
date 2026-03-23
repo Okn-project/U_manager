@@ -5,6 +5,9 @@ from src.models.dxf_model import DXFDoc
 from src.models.app_model import AppDoc
 from src.controllers.dxf_controller import DXFController
 from src.views.temporary_user_input import TemporaryUserInput
+from PyQt5.QtWidgets import QApplication
+from src.views.main_window import MainWindow
+import sys
 
 
 class Application:
@@ -12,6 +15,9 @@ class Application:
         """
         central application class
         """
+        self.app = QApplication(sys.argv)
+        self.main_window = MainWindow()
+
         self.doc = AppDoc()
         self.dxf_doc = DXFDoc()
         self.dxf_parser = DxfParser()
@@ -29,6 +35,5 @@ class Application:
             doc=self.doc,
             dxf_doc=self.dxf_doc
         )
-
 
 
