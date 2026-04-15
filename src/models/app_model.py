@@ -4,9 +4,9 @@ import pandas as pd
 
 class AppDoc:
     def __init__(self,
-                 layers: pd.DataFrame | None = None,
-                 geometries: gpd.GeoDataFrame | None = None,
-                 line_styles: pd.DataFrame | None = None
+                 layers: pd.DataFrame | None = pd.DataFrame(),
+                 geometries: gpd.GeoDataFrame | None = gpd.GeoDataFrame(),
+                 line_styles: pd.DataFrame | None = pd.DataFrame()
                  ):
         self.__layers = layers
         self.__geometries = geometries
@@ -41,3 +41,8 @@ class AppDoc:
         if not isinstance(value, pd.DataFrame):
             raise TypeError("line_styles must be a DataFrame object")
         self.__line_styles = value
+
+    def clear(self):
+        self.__layers = pd.DataFrame()
+        self.__geometries = gpd.GeoDataFrame()
+        self.__line_styles = pd.DataFrame()

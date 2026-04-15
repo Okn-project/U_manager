@@ -101,7 +101,7 @@ class ShapelyDXFFormat:
              "Polygon": lambda polygon: polygon.exterior.coords
              }
 
-    def convert_gpd_data_to_dxf(self, dxf_doc: DXFDoc, app_doc: AppDoc) -> None:
+    def convert_gpd_data_to_dxf(self, dxf_doc: DXFDoc, app_doc: AppDoc, save_path) -> None:
         """
                TODO
                :param dxf_doc:
@@ -122,7 +122,7 @@ class ShapelyDXFFormat:
             add_func(coords, dxfattribs=dxfattribs.to_dict())
 
         # temporary usage
-        doc.saveas(r"tests/data/test_res.dxf", encoding='utf-8')
+        doc.saveas(save_path, encoding='utf-8')
 
     @staticmethod
     def convert_linestring_to_lwpolyline(linestring: gpd.pd.Series) -> tuple:

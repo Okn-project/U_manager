@@ -59,4 +59,3 @@ class DXFDoc:
         if not isinstance(value, list):
             raise TypeError("linetypes must be a list of dictionaries")
         self.__linetypes = value
-

@@ -7,7 +7,12 @@ from src.controllers.dxf_controller import DXFController
 from src.views.temporary_user_input import TemporaryUserInput
 from PyQt5.QtWidgets import QApplication
 from src.views.main_window import MainWindow
+from src.views.clip_polygons_window import ClipPolygonsWindow
+from src.config import Config
 import sys
+import sys
+import traceback
+import os
 
 
 class Application:
@@ -17,6 +22,7 @@ class Application:
         """
         self.app = QApplication(sys.argv)
         self.main_window = MainWindow()
+        self.clip_polygons_window = ClipPolygonsWindow()
 
         self.doc = AppDoc()
         self.dxf_doc = DXFDoc()
@@ -24,16 +30,19 @@ class Application:
         self.dxf_shapely_format = DXFShapelyFormat()
         self.shapely_dxf_format = ShapelyDXFFormat()
         self.dxf_processor = DXFProcessor()
+        self.config = Config()
         self.temporary_user_input = TemporaryUserInput()
         self.dxf_controller = DXFController(
             dxf_parser=self.dxf_parser,
             dxf_processor=self.dxf_processor,
             dxf_shapely_format=self.dxf_shapely_format,
             shapely_dxf_format=self.shapely_dxf_format,
+            config=self.config,
             settings=self.temporary_user_input.settings,
             file_path=self.temporary_user_input.file_path,
             doc=self.doc,
-            dxf_doc=self.dxf_doc
+            dxf_doc=self.dxf_doc,
+            main_window=self.main_window,
+            clip_polygons_window=self.clip_polygons_window
+
         )
-
-
