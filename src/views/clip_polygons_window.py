@@ -1,17 +1,10 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QScrollArea, QWidget, QLabel, QSpacerItem
 from PyQt5.QtCore import Qt, QMargins, pyqtSignal
-from src.views.widgets import (
-    LayersNamesLabelFrame,
-    LayersNamesLabel,
-    PanelHeader,
-    PanelScroller,
-    MoveLeftButton,
-    MoveRightButton,
-    CLipButton,
-)
+from src.views.labels import LayersNamesLabel
+from src.views.frames import LayersNamesLabelFrame
+
 from src.views.panels.layers_panel import LayerPanel
 from src.views.panels.buttons_panel import ButtonsPanel
-from src.utils.utils import clear_layout, remove_stretch
 
 
 class ClipPolygonsWindow(QDialog):
