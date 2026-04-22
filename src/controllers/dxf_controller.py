@@ -123,11 +123,13 @@ class DXFController:
         except UnicodeDecodeError:
             title = f"Повреждение кодировки"
             message = f"В Загруженном файле обнаружена ошибка кодировки, файл не может быть прочтен"
+            self.main_window.show_warning_failed_import(title, message)
             self.file_path = None
             return
         except Exception:
             title = f"Критическая ошибка"
             message = f"При загрузке файла произошел критический сбой. Файл не может быть прочтен"
+            self.main_window.show_warning_failed_import(title, message)
             self.file_path = None
             return
 

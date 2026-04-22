@@ -73,7 +73,7 @@ class ClipPolygonsWindow(QDialog):
         frame.set_selected()
 
     def check_panels(self):
-        clip_active = self.layers_panel.has_frames() and self.poly_panel.has_frames()
+        clip_active = self.lines_panel.has_frames() and self.poly_panel.has_frames()
         self.buttons_panel.clip_active(clip_active)
 
     def add_lines_to_settings(self, signal):
