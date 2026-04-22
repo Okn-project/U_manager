@@ -6,8 +6,8 @@ from src.core.processor.dxf_processor import DXFProcessor
 from src.formatters.ezdxf_geopandas_convert import DXFShapelyFormat, ShapelyDXFFormat
 from src.models.dxf_model import DXFDoc
 from src.models.app_model import AppDoc
-from src.views.main_window import MainWindow
-from src.views.clip_polygons_window import ClipPolygonsWindow
+from src.views.windows import MainWindow
+from src.views.windows import ClipPolygonsWindow
 from src.config import Config
 
 
@@ -22,8 +22,6 @@ class DXFController:
                  dxf_shapely_format: DXFShapelyFormat,
                  shapely_dxf_format: ShapelyDXFFormat,
                  config: Config | None,
-                 settings: dict | None = None,
-                 file_path: str | None = None,
                  doc: AppDoc | None = None,
                  dxf_doc: DXFDoc | None = None,
                  main_window: MainWindow = None,
@@ -35,8 +33,6 @@ class DXFController:
         self.dxf_shapely_format = dxf_shapely_format
         self.shapely_dxf_format = shapely_dxf_format
         self.config = config
-        self.settings = settings
-        self.file_path = file_path
         self.dxf_doc = dxf_doc
         self.main_window = main_window
         self.clip_polygons_window = clip_polygons_window

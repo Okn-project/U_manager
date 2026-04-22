@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QMainWindow, QPushButton, QLabel,
                              QVBoxLayout, QWidget, QLineEdit, QHBoxLayout, QMenu, QMessageBox)
-from src.views.main_menu import MainMenu
+from src.views.menus import MainMenu
 
 
 class MainWindow(QMainWindow):
@@ -30,4 +30,3 @@ class MainWindow(QMainWindow):
         :return:
         """
         QMessageBox.warning(self, title, message)
-

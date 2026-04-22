@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QScrollArea, QWid
 from PyQt5.QtCore import Qt, QMargins, pyqtSignal
 from src.views.labels import LayersNamesLabel
 from src.views.frames import LayersNamesLabelFrame
-
 from src.views.panels.layers_panel import LayerPanel
 from src.views.panels.buttons_panel import ButtonsPanel
 

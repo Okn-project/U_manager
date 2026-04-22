@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import pyqtSignal
-from src.views.buttons.move_button import MoveRightButton, MoveLeftButton
-from src.views.buttons.clip_button import CLipButton
+from src.views.buttons import MoveRightButton, MoveLeftButton
+from src.views.buttons import CLipButton
 
 
 class ButtonsPanel(QWidget):
